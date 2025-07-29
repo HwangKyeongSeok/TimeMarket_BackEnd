@@ -14,6 +14,8 @@ class TimePost(models.Model):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    price = models.IntegerField(default=0)  # 가격 필드 추가 (필요에 따라 옵션 조정)
+
 
     def __str__(self):
         return f"{self.title} ({self.get_type_display()})"
