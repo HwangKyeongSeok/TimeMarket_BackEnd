@@ -22,6 +22,8 @@
 | PATCH | /users/me/          | 내 정보 수정      |
 | GET   | /users/\<user\_id>/ | 다른 사용자 정보 보기 |
 
+/auth/signup/ 에는 'nickname', 'email', 'password' 가 unique 하게 들어와야함.
+
 ---
 
 ## 🕒 시간 판매 / 구인 관련 (Time Posts)
