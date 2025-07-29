@@ -57,3 +57,53 @@ class TransactionListView(generics.ListAPIView):
     def get_queryset(self):
         wallet, _ = Wallet.objects.get_or_create(user=self.request.user)
         return Transaction.objects.filter(wallet=wallet).order_by('-timestamp')
+
+from decimal import Decimal, InvalidOperation
+
+class TransferView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        sender = request.user
+        recipient_username = request.data.get('recipient_username')
+        amount = request.data.get('amount')
+
+        
+        # 필수 값 체크
+        if not recipient_username or amount is None:
+            return Response({'error': 'recipient_username and amount are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            amount = Decimal(str(amount))  # float 대신 Decimal 변환
+            if amount <= 0:
+                return Response({'error': 'Amount must be positive.'}, status=status.HTTP_400_BAD_REQUEST)
+        except (InvalidOperation, ValueError):
+            return Response({'error': 'Invalid amount format.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            recipient = User.objects.get(username=recipient_username)
+        except User.DoesNotExist:
+            return Response({'error': 'Recipient user not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if recipient == sender:
+            return Response({'error': 'Cannot transfer to yourself.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 지갑 가져오기
+        try:
+            sender_wallet = Wallet.objects.get(user=sender)
+            recipient_wallet = Wallet.objects.get(user=recipient)
+        except Wallet.DoesNotExist:
+            return Response({'error': 'Wallet not found for sender or recipient.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # 잔액 부족 체크
+        if sender_wallet.balance < amount:
+            return Response({'error': 'Insufficient balance.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 잔액 업데이트 (트랜잭션 처리 권장)
+        sender_wallet.balance -= amount
+        recipient_wallet.balance += amount
+
+        sender_wallet.save()
+        recipient_wallet.save()
+
+        return Response({'message': f'{amount}시간이 {recipient_username}님께 성공적으로 전송되었습니다.'})
