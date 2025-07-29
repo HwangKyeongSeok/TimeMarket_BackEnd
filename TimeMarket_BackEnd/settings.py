@@ -25,7 +25,17 @@ SECRET_KEY = "django-insecure-87*r(fb$ur#dd9nkwu1(-+zfgwpr+5n_61zdtso=arl^j&grp)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# JWT 설정 예시
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
+
 ALLOWED_HOSTS = []
+
+# settings.py
+AUTH_USER_MODEL = 'users.User'
 
 
 # Application definition
@@ -37,7 +47,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "wallet"
+    "wallet", "users"
 ]
 
 MIDDLEWARE = [
