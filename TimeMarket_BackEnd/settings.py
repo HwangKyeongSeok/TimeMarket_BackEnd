@@ -32,6 +32,14 @@ REST_FRAMEWORK = {
     )
 }
 
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),  # 기본 5분 → 60분으로 연장
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+}
+
+
 ALLOWED_HOSTS = []
 
 # settings.py
@@ -90,6 +98,14 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+# 미디어 작업
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 # Password validation
