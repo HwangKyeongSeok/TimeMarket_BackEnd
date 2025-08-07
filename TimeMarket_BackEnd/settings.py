@@ -55,6 +55,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "channels",  # Channels 추가
+    "chat",      # chat 앱 추가
     "wallet", "users", "map", "posts"
 ]
 
@@ -87,6 +89,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "TimeMarket_BackEnd.wsgi.application"
+ASGI_APPLICATION = "TimeMarket_BackEnd.asgi.application"
 
 
 # Database
@@ -148,3 +151,9 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
