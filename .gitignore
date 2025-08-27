@@ -60,3 +60,4 @@ celerybeat-schedule
 # 기타
 *.sqlite3
 *.db
+*.idea/copilotDiffState.xml

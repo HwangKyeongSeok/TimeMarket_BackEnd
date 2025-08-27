@@ -57,7 +57,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "channels",  # Channels 추가
     "chat",      # chat 앱 추가
-    "wallet", "users", "map", "posts"
+    "wallet", "users", "map", "posts",
+    "push_notice",  # 푸시 알림 앱 추가
 ]
 
 MIDDLEWARE = [
@@ -157,3 +158,6 @@ CHANNEL_LAYERS = {
         "BACKEND": "channels.layers.InMemoryChannelLayer"
     }
 }
+
+# Firebase Admin SDK 자격증명 설정 (필요 시 환경변수로 교체)
+FIREBASE_SERVICE_ACCOUNT_FILE = os.path.join(BASE_DIR, 'firebase-service-account.json')  # 실제 파일 경로로 교체
