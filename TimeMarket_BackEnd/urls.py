@@ -8,6 +8,7 @@ urlpatterns = [
     path('api/map/', include('map.urls')),
     path('api/time-posts/', include('posts.urls')),
     path('api/chat/', include('chat.urls')),
+    path('api/push/', include('push_notice.urls')),  # 추가
 ]
 
 from django.conf import settings
