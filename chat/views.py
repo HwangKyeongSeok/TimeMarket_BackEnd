@@ -7,6 +7,7 @@ from .serializers import RoomSerializer, ChatMessageSerializer
 from users.models import User
 from posts.models import TimePost
 from django.http import Http404
+from push_notice.services import send_push_to_user  # 추가
 
 class MatchRequestView(APIView):
     permission_classes = [IsAuthenticated]
@@ -27,6 +28,16 @@ class MatchRequestView(APIView):
 
         room = Room.objects.create(post=post)
         room.users.add(request.user, receiver)
+
+        # 방 생성 알림 전송 (수신자에게)
+        try:
+            title = f"{request.user.nickname}와 새로운 채팅방"
+            body = f"게시글: {post.title}"
+            data = {"type": "room_created", "room_id": str(room.id), "post_id": str(post.id)}
+            send_push_to_user(receiver, title, body, data)
+        except Exception:
+            pass
+
         return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)
 
 class MyChatsView(generics.ListAPIView):
