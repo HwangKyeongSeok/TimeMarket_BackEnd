@@ -40,7 +40,11 @@ SIMPLE_JWT = {
 }
 
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost', '127.0.0.1',  # 1. 로컬 PC (chrome)
+    '10.0.2.2',  # 2. 에뮬레이터 (Android Studio)
+    '172.30.1.50',  # 3. 로컬 PC가 사용하고 있는 ip 주소 (스마트폰으로 개발 시)
+]
 
 # settings.py
 AUTH_USER_MODEL = 'users.User'
@@ -59,9 +63,11 @@ INSTALLED_APPS = [
     "chat",      # chat 앱 추가
     "wallet", "users", "map", "posts",
     "push_notice",  # 푸시 알림 앱 추가
+    "corsheaders",  # 👈 1. 이 부분을 추가
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",  # 👈 1. 이 부분을 가장 위에 추가
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -161,3 +167,6 @@ CHANNEL_LAYERS = {
 
 # Firebase Admin SDK 자격증명 설정 (필요 시 환경변수로 교체)
 FIREBASE_SERVICE_ACCOUNT_FILE = os.path.join(BASE_DIR, 'firebase-service-account.json')  # 실제 파일 경로로 교체
+
+# 📌 1. 추가: CORS 설정
+CORS_ALLOW_ALL_ORIGINS = True
