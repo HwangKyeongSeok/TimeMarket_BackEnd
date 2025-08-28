@@ -53,17 +53,9 @@ class ChatRoomDetailView(generics.RetrieveAPIView):
     lookup_field = 'id'
     lookup_url_kwarg = 'room_id'
 
-class ChatMessageListCreateView(generics.ListCreateAPIView):
+class ChatMessageListCreateView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ChatMessageSerializer
     def get_queryset(self):
         room_id = self.kwargs['room_id']
-        return ChatMessage.objects.filter(room_name=str(room_id)).order_by('timestamp')
-    def perform_create(self, serializer):
-        room_id = self.kwargs['room_id']
-        receiver_id = self.request.data.get('receiver_id')
-        serializer.save(
-            room_name=str(room_id),
-            sender=self.request.user,
-            receiver=User.objects.get(id=receiver_id)
-        )
+        return ChatMessage.objects.filter(room_id=room_id).order_by('timestamp')
