@@ -1,35 +1,38 @@
-from rest_framework import generics, status
+from rest_framework import generics, status, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from .models import Room, ChatMessage
-from .serializers import RoomSerializer, ChatMessageSerializer
+from .serializers import RoomSerializer, ChatMessageSerializer, ChatRoomListSerializer
 from users.models import User
 from posts.models import TimePost
 from django.http import Http404
-from push_notice.services import send_push_to_user  # 추가
+from push_notice.services import send_push_to_user
+
 
 class MatchRequestView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         post_id = request.data.get('post_id')
-        receiver_id = request.data.get('receiver_id')
 
         try:
             post = TimePost.objects.get(id=post_id)
         except TimePost.DoesNotExist:
             raise Http404("TimePost with the given ID does not exist.")
 
-        try:
-            receiver = User.objects.get(id=receiver_id)
-        except User.DoesNotExist:
-            raise Http404("User with the given ID does not exist.")
+        # ✅ 'post.author'를 올바른 필드 이름인 'post.user'로 수정했습니다.
+        receiver = post.user
+
+        # 나와 상대방이 이미 참여하고 있는 채팅방이 있는지 확인
+        existing_room = Room.objects.filter(users=request.user).filter(users=receiver).first()
+        if existing_room:
+            serializer = RoomSerializer(existing_room)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
         room = Room.objects.create(post=post)
         room.users.add(request.user, receiver)
 
-        # 방 생성 알림 전송 (수신자에게)
         try:
             title = f"{request.user.nickname}와 새로운 채팅방"
             body = f"게시글: {post.title}"
@@ -40,11 +43,19 @@ class MatchRequestView(APIView):
 
         return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)
 
+
 class MyChatsView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = RoomSerializer
+    serializer_class = ChatRoomListSerializer
+
     def get_queryset(self):
         return Room.objects.filter(users=self.request.user)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({"request": self.request})
+        return context
+
 
 class ChatRoomDetailView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
@@ -53,17 +64,25 @@ class ChatRoomDetailView(generics.RetrieveAPIView):
     lookup_field = 'id'
     lookup_url_kwarg = 'room_id'
 
+
 class ChatMessageListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ChatMessageSerializer
+
     def get_queryset(self):
         room_id = self.kwargs['room_id']
-        return ChatMessage.objects.filter(room_name=str(room_id)).order_by('timestamp')
+        return ChatMessage.objects.filter(room__id=room_id).order_by('timestamp')
+
     def perform_create(self, serializer):
         room_id = self.kwargs['room_id']
-        receiver_id = self.request.data.get('receiver_id')
+        room = Room.objects.get(id=room_id)
+        receiver = room.users.exclude(id=self.request.user.id).first()
+
+        if not receiver:
+            raise serializers.ValidationError("상대방을 찾을 수 없습니다.")
+
         serializer.save(
-            room_name=str(room_id),
+            room=room,
             sender=self.request.user,
-            receiver=User.objects.get(id=receiver_id)
+            receiver=receiver
         )
